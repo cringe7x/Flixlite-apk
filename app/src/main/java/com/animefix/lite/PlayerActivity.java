@@ -162,9 +162,26 @@ public class PlayerActivity extends Activity {
         if(player!=null){
             long position=player.getCurrentPosition();
             android.content.SharedPreferences prefs=getSharedPreferences("zerox_playback",MODE_PRIVATE);
-            prefs.edit().putString("last_title",currentTitle==null?"Untitled video":currentTitle)
-                    .putString("last_url",currentUrl==null?"":currentUrl)
-                    .putLong("last_position",position).apply();
+            String savedTitle=currentTitle==null?"Untitled video":currentTitle;
+            String savedUrl=currentUrl==null?"":currentUrl;
+            try{
+                JSONArray oldHistory=new JSONArray(prefs.getString("watch_history","[]"));
+                JSONArray updated=new JSONArray();
+                JSONObject current=new JSONObject();
+                current.put("title",savedTitle);current.put("url",savedUrl);current.put("position",position);
+                updated.put(current);
+                for(int i=0;i<oldHistory.length()&&updated.length()<30;i++){
+                    JSONObject item=oldHistory.optJSONObject(i);if(item==null)continue;
+                    if(savedUrl.equals(item.optString("url","")))continue;
+                    updated.put(item);
+                }
+                prefs.edit().putString("last_title",savedTitle)
+                        .putString("last_url",savedUrl)
+                        .putLong("last_position",position)
+                        .putString("watch_history",updated.toString()).apply();
+            }catch(Exception ignored){
+                prefs.edit().putString("last_title",savedTitle).putString("last_url",savedUrl).putLong("last_position",position).apply();
+            }
             player.release();player=null;
         }
         super.onStop();
