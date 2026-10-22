@@ -416,12 +416,12 @@ public class MainActivity extends Activity {
         String stored=prefs.getString("repos","");
         ArrayList<String> out=new ArrayList<>();
         if(stored.isEmpty()){for(String s:DEFAULT_PROVIDER_REPOS)out.add(s);}
-        else {for(String s:stored.split("\\n"))if(s.startsWith("https://"))out.add(s);}
+        else {for(String s:stored.split("\n"))if(s.startsWith("https://"))out.add(s);}
         return out;
     }
     private void saveProviderRepos(ArrayList<String> repos){
         StringBuilder b=new StringBuilder();
-        for(String s:repos){if(b.length()>0)b.append("\\n");b.append(s);}
+        for(String s:repos){if(b.length()>0)b.append("\n");b.append(s);}
         getSharedPreferences("zerox_provider_repos",MODE_PRIVATE).edit().putString("repos",b.toString()).apply();
     }
     private void openProviderRepositories(){
@@ -438,7 +438,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams acp=params(-1,-2);acp.topMargin=dp(8);box.addView(actions,acp);
         TextView result=text("",12,Color.rgb(184,194,220),false);result.setPadding(0,dp(10),0,0);box.addView(result);
         ArrayList<String> repos=getProviderRepos();
-        Runnable showRepos=()->{StringBuilder b=new StringBuilder("Configured repositories ("+repos.size()+")\\n");for(int i=0;i<repos.size();i++)b.append(i+1).append(". ").append(repos.get(i)).append("\\n");result.setText(b.toString());};
+        Runnable showRepos=()->{StringBuilder b=new StringBuilder("Configured repositories ("+repos.size()+")\n");for(int i=0;i<repos.size();i++)b.append(i+1).append(". ").append(repos.get(i)).append("\n");result.setText(b.toString());};
         showRepos.run();
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Provider repositories").setView(box).setNegativeButton("Close",null).create();
         add.setOnClickListener(v->{String u=entry.getText().toString().trim();if(!u.startsWith("https://")||!(u.endsWith(".json")||u.contains(".json?"))){result.setText("Enter a valid HTTPS JSON manifest URL.");return;}if(repos.contains(u)){result.setText("That repository is already configured.");return;}repos.add(u);saveProviderRepos(repos);entry.setText("");showRepos.run();});
@@ -458,8 +458,8 @@ public class MainActivity extends Activity {
                         else if(lists!=null){type="CloudStream repository";count=lists.length();}
                         else if(obj.optJSONArray("repositories")!=null){count=obj.optJSONArray("repositories").length();type="Repository list";}
                     }else if(parsed instanceof JSONArray){count=((JSONArray)parsed).length();type="Extension list";}
-                    summary.append("✓ ").append(type).append(" — ").append(count).append(" entries\\n").append(u).append("\\n\\n");
-                }catch(Exception e){summary.append("✕ Unavailable/invalid: ").append(e.getMessage()==null?"error":e.getMessage()).append("\\n").append(u).append("\\n\\n");}
+                    summary.append("✓ ").append(type).append(" — ").append(count).append(" entries\n").append(u).append("\n\n");
+                }catch(Exception e){summary.append("✕ Unavailable/invalid: ").append(e.getMessage()==null?"error":e.getMessage()).append("\n").append(u).append("\n\n");}
                 finally{if(conn!=null)conn.disconnect();}
             }
             summary.append("Important: this check reads manifest metadata only. It does not execute scraper code or prove that a stream can be played.");
