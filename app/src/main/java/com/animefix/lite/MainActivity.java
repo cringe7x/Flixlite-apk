@@ -141,28 +141,58 @@ public class MainActivity extends Activity {
         list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams lp=params(-1,-2);lp.topMargin=dp(14);root.addView(list,lp);
 
-        TextView add=text("Catalogue settings",20,Color.WHITE,true);
-        LinearLayout.LayoutParams ap=params(-1,-2);ap.topMargin=dp(28);root.addView(add,ap);
+        // Separate expandable folders keep the home catalogue clean.
+        LinearLayout catalogueFolder = folder(root, "▤", "Catalogue Settings", "Load or refresh your HTTPS JSON catalogue", 18);
+        LinearLayout catalogueBody = folderBody(catalogueFolder);
         TextView helper=text("Paste a public HTTPS JSON catalogue you are allowed to use.",12,Color.rgb(158,171,205),false);
-        LinearLayout.LayoutParams helperp=params(-1,-2);helperp.topMargin=dp(5);root.addView(helper,helperp);
+        catalogueBody.addView(helper);
         urlInput=input("https://example.com/catalog.json");
-        LinearLayout.LayoutParams up=params(-1,dp(50));up.topMargin=dp(10);root.addView(urlInput,up);
+        LinearLayout.LayoutParams up=params(-1,dp(50));up.topMargin=dp(10);catalogueBody.addView(urlInput,up);
         Button load=new Button(this);load.setText("Load catalogue");load.setAllCaps(false);load.setTextColor(Color.WHITE);load.setBackground(roundGradient(new int[]{purple,Color.rgb(94,93,255)},12));
-        LinearLayout.LayoutParams bp=params(-1,dp(48));bp.topMargin=dp(8);root.addView(load,bp);load.setOnClickListener(v->loadCatalogue());
+        LinearLayout.LayoutParams bp=params(-1,dp(48));bp.topMargin=dp(8);catalogueBody.addView(load,bp);load.setOnClickListener(v->loadCatalogue());
 
-        TextView manualTitle=text("Play a direct video URL",20,Color.WHITE,true);
-        LinearLayout.LayoutParams mtp=params(-1,-2);mtp.topMargin=dp(24);root.addView(manualTitle,mtp);
+        LinearLayout directFolder = folder(root, "▶", "Direct Video URL", "Play a supported stream link directly", 12);
+        LinearLayout directBody = folderBody(directFolder);
         TextView manualHint=text("MP4, HLS or other supported direct stream URL",12,Color.rgb(158,171,205),false);
-        LinearLayout.LayoutParams mhp=params(-1,-2);mhp.topMargin=dp(4);root.addView(manualHint,mhp);
+        directBody.addView(manualHint);
         manualUrlInput=input("https://example.com/video.mp4");
-        LinearLayout.LayoutParams mup=params(-1,dp(50));mup.topMargin=dp(10);root.addView(manualUrlInput,mup);
+        LinearLayout.LayoutParams mup=params(-1,dp(50));mup.topMargin=dp(10);directBody.addView(manualUrlInput,mup);
         Button playUrl=new Button(this);playUrl.setText("▶   Play in Zerox TV");playUrl.setAllCaps(false);playUrl.setTextColor(Color.BLACK);playUrl.setBackground(round(cyan,12));
-        LinearLayout.LayoutParams pup=params(-1,dp(48));pup.topMargin=dp(8);root.addView(playUrl,pup);playUrl.setOnClickListener(v->playManualUrl());
-        TextView format=text("JSON: array or object containing movies/results. Fields: title/name, language/lang, year, url/link/stream_url. HTTPS sources only; no login or DRM bypass.",11,Color.rgb(132,145,177),false);
-        LinearLayout.LayoutParams formatp=params(-1,-2);formatp.topMargin=dp(12);root.addView(format,formatp);
+        LinearLayout.LayoutParams pup=params(-1,dp(48));pup.topMargin=dp(8);directBody.addView(playUrl,pup);playUrl.setOnClickListener(v->playManualUrl());
+        TextView directNote=text("HTTPS links only. The video must be directly accessible and supported by the player.",11,Color.rgb(132,145,177),false);
+        LinearLayout.LayoutParams dnp=params(-1,-2);dnp.topMargin=dp(10);directBody.addView(directNote,dnp);
+
+        LinearLayout settingsFolder = folder(root, "⚙", "Settings", "App information and quick actions", 12);
+        LinearLayout settingsBody = folderBody(settingsFolder);
+        TextView appInfo=text("ZEROX TV  •  Version 1.0\nNeon anime theme  •  Media3 player\nCatalogue and direct playback require public HTTPS sources.",12,Color.rgb(184,194,220),false);
+        settingsBody.addView(appInfo);
+        Button clearSearch=new Button(this);clearSearch.setText("Clear search");clearSearch.setAllCaps(false);clearSearch.setTextColor(Color.WHITE);clearSearch.setBackground(round(panel2,12));
+        LinearLayout.LayoutParams csp=params(-1,dp(44));csp.topMargin=dp(10);settingsBody.addView(clearSearch,csp);
+        clearSearch.setOnClickListener(v->{if(search!=null)search.setText("");language="All";render();Toast.makeText(this,"Search cleared",Toast.LENGTH_SHORT).show();});
+        TextView format=text("Catalogue JSON: an array or an object containing movies/results. Fields: title/name, language/lang, year, url/link/stream_url.",11,Color.rgb(132,145,177),false);
+        LinearLayout.LayoutParams formatp=params(-1,-2);formatp.topMargin=dp(12);settingsBody.addView(format,formatp);
         setContentView(scroll);
     }
 
+
+    private LinearLayout folder(LinearLayout parent,String icon,String title,String subtitle,int topMargin){
+        LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);card.setBackground(round(panel,16));
+        LinearLayout.LayoutParams cp=params(-1,-2);cp.topMargin=dp(topMargin);parent.addView(card,cp);
+        LinearLayout header=new LinearLayout(this);header.setOrientation(LinearLayout.HORIZONTAL);header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(dp(14),dp(14),dp(14),dp(14));header.setBackground(round(panel,16));card.addView(header);
+        TextView glyph=text(icon,22,cyan,true);glyph.setGravity(Gravity.CENTER);header.addView(glyph,params(dp(36),dp(36)));
+        LinearLayout labels=new LinearLayout(this);labels.setOrientation(LinearLayout.VERTICAL);labels.setPadding(dp(10),0,0,0);
+        labels.addView(text(title,15,Color.WHITE,true));TextView detail=text(subtitle,10,Color.rgb(158,171,205),false);
+        LinearLayout.LayoutParams dp1=params(-1,-2);dp1.topMargin=dp(3);labels.addView(detail,dp1);
+        header.addView(labels,new LinearLayout.LayoutParams(0,-2,1));
+        TextView arrow=text("⌄",22,purple,true);header.addView(arrow);
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(14),0,dp(14),dp(15));body.setVisibility(View.GONE);card.addView(body);
+        header.setOnClickListener(v->{boolean open=body.getVisibility()!=View.VISIBLE;body.setVisibility(open?View.VISIBLE:View.GONE);arrow.setText(open?"⌃":"⌄");});
+        return card;
+    }
+    private LinearLayout folderBody(LinearLayout folder){
+        return (LinearLayout)folder.getChildAt(1);
+    }
     private void addSample(String t,String l,String y){movies.add(new Movie(t,l,y,""));}
     private EditText input(String hint){EditText e=new EditText(this);e.setSingleLine(true);e.setTextColor(Color.WHITE);e.setHintTextColor(Color.rgb(125,137,169));e.setHint(hint);e.setTextSize(13);e.setPadding(dp(14),dp(10),dp(14),dp(10));e.setBackground(round(panel2,13));e.setSelectAllOnFocus(false);return e;}
     private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(Typeface.DEFAULT,bold?Typeface.BOLD:Typeface.NORMAL);return t;}
