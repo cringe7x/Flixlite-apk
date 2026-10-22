@@ -59,6 +59,7 @@ public class MainActivity extends Activity {
         addSample("Moonlight Academy", "Korean", "2025");
         addSample("Neon Samurai", "Japanese", "2024");
         addSample("Midnight Promise", "English", "2025");
+        renderGenreChips();
         render();
     }
 
