@@ -57,9 +57,9 @@ public class MainActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(16),dp(20),dp(16),dp(24));
         scroll.addView(root);
-        TextView brand = text("AnimeFix Lite", 27, Color.WHITE, true);
+        TextView brand = text("Zerox TV", 27, Color.WHITE, true);
         root.addView(brand);
-        TextView subtitle = text("Lightweight movie & anime catalogue", 13, Color.LTGRAY, false);
+        TextView subtitle = text("Anime • Movies • Streaming", 13, Color.LTGRAY, false);
         root.addView(subtitle);
         search = input("Search title or language…");
         LinearLayout.LayoutParams sp = params(-1,-2); sp.topMargin=dp(18); root.addView(search,sp);
