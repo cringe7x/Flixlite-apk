@@ -226,6 +226,16 @@ public class MainActivity extends Activity {
         try{Intent i=new Intent(this,PlayerActivity.class);i.putExtra("url",url);i.putExtra("title",title);i.putExtra("resume_position",position);startActivity(i);}
         catch(Exception e){Toast.makeText(this,"Cannot resume video",Toast.LENGTH_SHORT).show();}
     }
+    private void showMovieDetails(Movie m){
+        LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(20),dp(8),dp(20),dp(8));
+        TextView title=text(m.title,22,Color.WHITE,true);content.addView(title);
+        TextView meta=text((m.year.isEmpty()?"Year unknown":m.year)+"  •  "+m.language,12,cyan,true);LinearLayout.LayoutParams mp=params(-1,-2);mp.topMargin=dp(8);content.addView(meta,mp);
+        TextView synopsis=text("Discover this title in your Zerox TV catalogue. Add it to Favorites to find it quickly later.",13,Color.rgb(190,200,224),false);LinearLayout.LayoutParams sp=params(-1,-2);sp.topMargin=dp(14);content.addView(synopsis,sp);
+        TextView stream=text((m.link==null||m.link.isEmpty())?"Stream: No playable URL in this catalogue entry.":"Stream: Ready to open using the in-app player.",11,Color.rgb(151,165,199),false);LinearLayout.LayoutParams stp=params(-1,-2);stp.topMargin=dp(10);content.addView(stream,stp);
+        AlertDialog dialog=new AlertDialog.Builder(this).setView(content).setNegativeButton("Close",null).create();
+        if(m.link!=null&&!m.link.isEmpty())dialog.setButton(AlertDialog.BUTTON_POSITIVE,"▶ Play",(d,w)->openPlayer(m.link,m.title));
+        dialog.show();if(dialog.getWindow()!=null)dialog.getWindow().setBackgroundDrawable(round(panel,18));
+    }
     private String favoriteKey(Movie m){return "fav_"+Integer.toHexString((m.title+"|"+m.language+"|"+m.year+"|"+m.link).hashCode());}
     private boolean isFavorite(Movie m){return getSharedPreferences("zerox_favorites",MODE_PRIVATE).getBoolean(favoriteKey(m),false);}
     private void setFavorite(Movie m,boolean saved){getSharedPreferences("zerox_favorites",MODE_PRIVATE).edit().putBoolean(favoriteKey(m),saved).apply();}
@@ -273,6 +283,9 @@ public class MainActivity extends Activity {
                 TextView title=text(m.title,14,Color.WHITE,true);title.setMaxLines(2);title.setPadding(dp(3),dp(10),dp(3),0);card.addView(title);
                 TextView meta=text(m.year.isEmpty()?m.language:m.year+"  •  "+m.language,10,Color.rgb(151,165,199),false);
                 meta.setPadding(dp(3),dp(4),dp(3),0);card.addView(meta);
+                Button details=new Button(this);details.setText("ⓘ  Details");details.setTextSize(10);details.setAllCaps(false);details.setTextColor(Color.WHITE);details.setBackground(round(panel2,9));
+                LinearLayout.LayoutParams detp=params(-1,dp(34));detp.topMargin=dp(7);card.addView(details,detp);
+                details.setOnClickListener(v->showMovieDetails(m));
                 Button favorite=new Button(this);favorite.setText(isFavorite(m)?"★  Saved":"☆  Add to favorites");favorite.setTextSize(10);favorite.setAllCaps(false);favorite.setTextColor(isFavorite(m)?cyan:Color.WHITE);favorite.setBackground(round(panel2,9));
                 LinearLayout.LayoutParams favp=params(-1,dp(34));favp.topMargin=dp(7);card.addView(favorite,favp);
                 favorite.setOnClickListener(v->{boolean saved=isFavorite(m);setFavorite(m,!saved);favorite.setText(!saved?"★  Saved":"☆  Add to favorites");favorite.setTextColor(!saved?cyan:Color.WHITE);if(language.equals("Favorites"))render();});
