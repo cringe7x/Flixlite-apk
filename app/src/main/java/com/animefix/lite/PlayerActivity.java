@@ -89,8 +89,10 @@ public class PlayerActivity extends Activity {
                 else if (playbackState == Player.STATE_ENDED) statusView.setText("Playback finished");
             }
         });
+        long resumePosition=getIntent().getLongExtra("resume_position",0L);
         player.setMediaItem(MediaItem.fromUri(Uri.parse(url)));
         player.prepare();
+        if(resumePosition>0)player.seekTo(resumePosition);
         player.play();
     }
 
@@ -156,5 +158,15 @@ public class PlayerActivity extends Activity {
         Toast.makeText(this, "Subtitle loaded. Use Subtitles to enable or disable it.", Toast.LENGTH_LONG).show();
     }
 
-    @Override protected void onStop(){super.onStop();if(player!=null){player.release();player=null;}}
+    @Override protected void onStop(){
+        if(player!=null){
+            long position=player.getCurrentPosition();
+            android.content.SharedPreferences prefs=getSharedPreferences("zerox_playback",MODE_PRIVATE);
+            prefs.edit().putString("last_title",currentTitle==null?"Untitled video":currentTitle)
+                    .putString("last_url",currentUrl==null?"":currentUrl)
+                    .putLong("last_position",position).apply();
+            player.release();player=null;
+        }
+        super.onStop();
+    }
 }
