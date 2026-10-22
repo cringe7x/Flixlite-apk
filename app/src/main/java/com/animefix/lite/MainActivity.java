@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
     private final int bg = Color.rgb(16,17,26), panel = Color.rgb(27,29,43), purple = Color.rgb(164,132,255);
     private final ArrayList<Movie> movies = new ArrayList<>();
     private LinearLayout list;
-    private EditText search, urlInput;
+    private EditText search, urlInput, manualUrlInput;
     private TextView status;
     private String language = "Hindi";
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
@@ -88,6 +88,9 @@ public class MainActivity extends Activity {
         TextView add=text("Add a catalogue",19,Color.WHITE,true);LinearLayout.LayoutParams ap=params(-1,-2);ap.topMargin=dp(20);root.addView(add,ap);
         urlInput=input("https://example.com/catalog.json");LinearLayout.LayoutParams up=params(-1,-2);up.topMargin=dp(8);root.addView(urlInput,up);
         Button load=new Button(this);load.setText("Load catalogue");load.setAllCaps(false);load.setTextColor(Color.BLACK);load.setBackground(round(purple,12));LinearLayout.LayoutParams bp=params(-1,dp(48));bp.topMargin=dp(8);root.addView(load,bp);load.setOnClickListener(v->loadCatalogue());
+        TextView manualTitle=text("Play a video URL",19,Color.WHITE,true); LinearLayout.LayoutParams mtp=params(-1,-2);mtp.topMargin=dp(22);root.addView(manualTitle,mtp);
+        manualUrlInput=input("https://example.com/video.mp4"); LinearLayout.LayoutParams mup=params(-1,-2);mup.topMargin=dp(8);root.addView(manualUrlInput,mup);
+        Button playUrl=new Button(this);playUrl.setText("Play URL in app");playUrl.setAllCaps(false);playUrl.setTextColor(Color.BLACK);playUrl.setBackground(round(purple,12));LinearLayout.LayoutParams pup=params(-1,dp(48));pup.topMargin=dp(8);root.addView(playUrl,pup);playUrl.setOnClickListener(v->playManualUrl());
         TextView format=text("JSON format: an array of objects, or an object containing ‘movies’ or ‘results’. Fields: title/name, language/lang, year, url/link/stream_url. Only authorized HTTPS sources are supported; this app does not bypass logins or DRM.",12,Color.LTGRAY,false);LinearLayout.LayoutParams fp=params(-1,-2);fp.topMargin=dp(12);root.addView(format,fp);
         setContentView(scroll);
     }
@@ -109,13 +112,16 @@ public class MainActivity extends Activity {
             TextView title=text(m.title,16,Color.WHITE,true);card.addView(title);
             TextView meta=text(m.language+(m.year.isEmpty()?"":" · "+m.year),12,Color.LTGRAY,false);LinearLayout.LayoutParams mp=params(-1,-2);mp.topMargin=dp(5);card.addView(meta,mp);
             if(m.link!=null&&!m.link.isEmpty()){
-                Button open=new Button(this);open.setText("Open source");open.setAllCaps(false);open.setTextColor(Color.BLACK);open.setBackground(round(purple,10));LinearLayout.LayoutParams op=params(-1,dp(44));op.topMargin=dp(8);card.addView(open,op);
-                open.setOnClickListener(v->{try{Intent i=new Intent(Intent.ACTION_VIEW,Uri.parse(m.link));startActivity(i);}catch(Exception e){Toast.makeText(this,"Cannot open this link",Toast.LENGTH_SHORT).show();}});
+                Button open=new Button(this);open.setText("Play in app");open.setAllCaps(false);open.setTextColor(Color.BLACK);open.setBackground(round(purple,10));LinearLayout.LayoutParams op=params(-1,dp(44));op.topMargin=dp(8);card.addView(open,op);
+                open.setOnClickListener(v->openPlayer(m.link,m.title));
             }else{TextView sample=text("Catalogue preview",11,Color.GRAY,false);LinearLayout.LayoutParams sm=params(-1,-2);sm.topMargin=dp(5);card.addView(sample,sm);}
             count++;
         }
         if(count==0){TextView empty=text("No titles found. Try another search or language.",13,Color.LTGRAY,false);empty.setGravity(Gravity.CENTER);empty.setPadding(0,dp(20),0,dp(20));list.addView(empty);}
     }
+
+    private void playManualUrl(){ String raw=manualUrlInput.getText().toString().trim(); if(!raw.toLowerCase(Locale.ROOT).startsWith("https://")){status.setText("Enter a valid HTTPS video URL.");return;} openPlayer(raw,"Online video"); }
+    private void openPlayer(String url,String title){ try{ Intent i=new Intent(this,PlayerActivity.class); i.putExtra("url",url); i.putExtra("title",title); startActivity(i);}catch(Exception e){Toast.makeText(this,"Cannot open video",Toast.LENGTH_SHORT).show();} }
 
     private void loadCatalogue(){
         String raw=urlInput.getText().toString().trim();
