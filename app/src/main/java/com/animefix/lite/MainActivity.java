@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
     private final int purple = Color.rgb(166, 93, 255);
     private final int cyan = Color.rgb(51, 229, 255);
     private final ArrayList<Movie> movies = new ArrayList<>();
-    private LinearLayout list;
+    private LinearLayout list, historyList;
     private EditText search, urlInput, manualUrlInput;
     private TextView status;
     private String language = "Hindi";
