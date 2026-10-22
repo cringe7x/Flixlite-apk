@@ -34,12 +34,18 @@ public class MainActivity extends Activity {
     private LinearLayout list, historyList;
     private EditText search, urlInput, manualUrlInput;
     private TextView status;
+    private LinearLayout genreChips;
+    private String genre = "All";
     private String language = "Hindi";
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
 
     static class Movie {
-        String title, language, year, link;
-        Movie(String t, String l, String y, String u) { title=t; language=l; year=y; link=u; }
+        String title, language, year, link, genre, posterUrl, synopsis, series, season, episode;
+        Movie(String t, String l, String y, String u) { this(t,l,y,u,"Other","","","","","",""); }
+        Movie(String t,String l,String y,String u,String g,String p,String s,String sr,String sn,String ep,String reserved) {
+            title=t; language=l; year=y; link=u; genre=g==null||g.trim().isEmpty()?"Other":g;
+            posterUrl=p==null?"":p; synopsis=s==null?"":s; series=sr==null?"":sr; season=sn==null?"":sn; episode=ep==null?"":ep;
+        }
     }
 
     @Override public void onCreate(Bundle state) {
@@ -129,6 +135,12 @@ public class MainActivity extends Activity {
             chip.setOnClickListener(v->{language=l; for(int i=0;i<chips.getChildCount();i++){TextView c=(TextView)chips.getChildAt(i);boolean on=c.getText().toString().equals(language);c.setBackground(round(on?cyan:panel2,22));c.setTextColor(on?Color.BLACK:Color.rgb(217,224,246));} render();});
         }
         hsv.addView(chips); LinearLayout.LayoutParams hp=params(-1,-2);hp.topMargin=dp(10);root.addView(hsv,hp);
+        TextView genreLabel=text("GENRE",10,Color.rgb(150,164,201),true);
+        LinearLayout.LayoutParams glp=params(-1,-2);glp.topMargin=dp(14);root.addView(genreLabel,glp);
+        HorizontalScrollView ghsv=new HorizontalScrollView(this);ghsv.setHorizontalScrollBarEnabled(false);
+        genreChips=new LinearLayout(this);genreChips.setOrientation(LinearLayout.HORIZONTAL);ghsv.addView(genreChips);
+        LinearLayout.LayoutParams ghp=params(-1,-2);ghp.topMargin=dp(8);root.addView(ghsv,ghp);
+        renderGenreChips();
 
         LinearLayout section = new LinearLayout(this);
         section.setGravity(Gravity.CENTER_VERTICAL);
@@ -179,7 +191,7 @@ public class MainActivity extends Activity {
         Button clearSearch=new Button(this);clearSearch.setText("Clear search");clearSearch.setAllCaps(false);clearSearch.setTextColor(Color.WHITE);clearSearch.setBackground(round(panel2,12));
         LinearLayout.LayoutParams csp=params(-1,dp(44));csp.topMargin=dp(10);settingsBody.addView(clearSearch,csp);
         clearSearch.setOnClickListener(v->{if(search!=null)search.setText("");language="All";render();Toast.makeText(this,"Search cleared",Toast.LENGTH_SHORT).show();});
-        TextView format=text("Catalogue JSON: an array or an object containing movies/results. Fields: title/name, language/lang, year, url/link/stream_url.",11,Color.rgb(132,145,177),false);
+        TextView format=text("Catalogue JSON: an array or an object containing movies/results. Fields: title/name, language/lang, year, genre/category, poster_url/poster/image, synopsis/description, series/show, season, episode/episode_number, url/link/stream_url.",11,Color.rgb(132,145,177),false);
         LinearLayout.LayoutParams formatp=params(-1,-2);formatp.topMargin=dp(12);settingsBody.addView(format,formatp);
         setContentView(scroll);
     }
@@ -231,7 +243,9 @@ public class MainActivity extends Activity {
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(20),dp(8),dp(20),dp(8));
         TextView title=text(m.title,22,Color.WHITE,true);content.addView(title);
         TextView meta=text((m.year.isEmpty()?"Year unknown":m.year)+"  •  "+m.language,12,cyan,true);LinearLayout.LayoutParams mp=params(-1,-2);mp.topMargin=dp(8);content.addView(meta,mp);
-        TextView synopsis=text("Discover this title in your Zerox TV catalogue. Add it to Favorites to find it quickly later.",13,Color.rgb(190,200,224),false);LinearLayout.LayoutParams sp=params(-1,-2);sp.topMargin=dp(14);content.addView(synopsis,sp);
+        String extra=(m.genre.isEmpty()?"":m.genre)+(m.series.isEmpty()?"":"  •  "+m.series)+(m.season.isEmpty()?"":"  •  Season "+m.season)+(m.episode.isEmpty()?"":"  •  Episode "+m.episode);
+        if(!extra.isEmpty()){TextView more=text(extra,11,Color.rgb(170,184,215),false);LinearLayout.LayoutParams morep=params(-1,-2);morep.topMargin=dp(6);content.addView(more,morep);}
+        TextView synopsis=text(m.synopsis.isEmpty()?"Discover this title in your Zerox TV catalogue. Add it to Favorites to find it quickly later.":m.synopsis,13,Color.rgb(190,200,224),false);LinearLayout.LayoutParams sp=params(-1,-2);sp.topMargin=dp(14);content.addView(synopsis,sp);
         TextView stream=text((m.link==null||m.link.isEmpty())?"Stream: No playable URL in this catalogue entry.":"Stream: Ready to open using the in-app player.",11,Color.rgb(151,165,199),false);LinearLayout.LayoutParams stp=params(-1,-2);stp.topMargin=dp(10);content.addView(stream,stp);
         AlertDialog dialog=new AlertDialog.Builder(this).setView(content).setNegativeButton("Close",null).create();
         if(m.link!=null&&!m.link.isEmpty())dialog.setButton(AlertDialog.BUTTON_POSITIVE,"▶ Play",(d,w)->openPlayer(m.link,m.title));
@@ -241,7 +255,30 @@ public class MainActivity extends Activity {
     private boolean isFavorite(Movie m){return getSharedPreferences("zerox_favorites",MODE_PRIVATE).getBoolean(favoriteKey(m),false);}
     private void setFavorite(Movie m,boolean saved){getSharedPreferences("zerox_favorites",MODE_PRIVATE).edit().putBoolean(favoriteKey(m),saved).apply();}
 
-    private void addSample(String t,String l,String y){movies.add(new Movie(t,l,y,""));}
+    private void addSample(String t,String l,String y){movies.add(new Movie(t,l,y,"",l.equals("Japanese")?"Anime":l.equals("Bangla")?"Drama":l.equals("Korean")?"Romance":"Adventure","","","","","",""));}
+
+    private void renderGenreChips(){
+        if(genreChips==null)return;
+        genreChips.removeAllViews();
+        java.util.LinkedHashSet<String> genres=new java.util.LinkedHashSet<>();genres.add("All");
+        for(Movie m:movies)if(m.genre!=null&&!m.genre.trim().isEmpty())genres.add(m.genre.trim());
+        for(String g:genres){
+            TextView chip=text(g,12,genre.equalsIgnoreCase(g)?Color.BLACK:Color.rgb(217,224,246),true);
+            chip.setGravity(Gravity.CENTER);chip.setPadding(dp(14),0,dp(14),0);
+            chip.setBackground(round(genre.equalsIgnoreCase(g)?cyan:panel2,22));
+            LinearLayout.LayoutParams p=params(-2,dp(34));p.rightMargin=dp(7);genreChips.addView(chip,p);
+            chip.setOnClickListener(v->{genre=g;renderGenreChips();render();});
+        }
+    }
+
+    private void loadPoster(String imageUrl,ImageView target){
+        if(imageUrl==null||!imageUrl.toLowerCase(Locale.ROOT).startsWith("https://"))return;
+        new Thread(()->{java.net.HttpURLConnection conn=null;try{
+            conn=(java.net.HttpURLConnection)new java.net.URL(imageUrl).openConnection();conn.setConnectTimeout(7000);conn.setReadTimeout(7000);conn.setInstanceFollowRedirects(true);
+            android.graphics.Bitmap bitmap=android.graphics.BitmapFactory.decodeStream(conn.getInputStream());
+            if(bitmap!=null)runOnUiThread(()->target.setImageBitmap(bitmap));
+        }catch(Exception ignored){}finally{if(conn!=null)conn.disconnect();}}).start();
+    }
     private EditText input(String hint){EditText e=new EditText(this);e.setSingleLine(true);e.setTextColor(Color.WHITE);e.setHintTextColor(Color.rgb(125,137,169));e.setHint(hint);e.setTextSize(13);e.setPadding(dp(14),dp(10),dp(14),dp(10));e.setBackground(round(panel2,13));e.setSelectAllOnFocus(false);return e;}
     private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(Typeface.DEFAULT,bold?Typeface.BOLD:Typeface.NORMAL);return t;}
     private GradientDrawable round(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
@@ -256,8 +293,9 @@ public class MainActivity extends Activity {
         ArrayList<Movie> visible=new ArrayList<>();
         for(Movie m:movies){
             if(language.equals("Favorites")&&!isFavorite(m))continue;
+            if(!genre.equals("All")&&!m.genre.equalsIgnoreCase(genre))continue;
             if(!language.equals("All")&&!language.equals("Favorites")&&!m.language.equalsIgnoreCase(language))continue;
-            if(!(m.title+" "+m.language+" "+m.year).toLowerCase(Locale.ROOT).contains(q))continue;
+            if(!(m.title+" "+m.language+" "+m.year+" "+m.genre+" "+m.series+" "+m.season+" "+m.episode).toLowerCase(Locale.ROOT).contains(q))continue;
             visible.add(m);
         }
         if(visible.isEmpty()){
@@ -278,7 +316,11 @@ public class MainActivity extends Activity {
                 LinearLayout poster=new LinearLayout(this);poster.setOrientation(LinearLayout.VERTICAL);poster.setGravity(Gravity.BOTTOM|Gravity.LEFT);
                 poster.setPadding(dp(10),dp(10),dp(10),dp(12));poster.setBackground(roundGradient(colors,11));
                 LinearLayout.LayoutParams pp=params(-1,dp(164));card.addView(poster,pp);
-                TextView emblem=text(posterEmblem(m),35,Color.WHITE,true);emblem.setGravity(Gravity.CENTER);
+                if(m.posterUrl!=null&&!m.posterUrl.isEmpty()){
+                    ImageView posterImage=new ImageView(this);posterImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    LinearLayout.LayoutParams imagep=params(-1,dp(108));poster.addView(posterImage,imagep);loadPoster(m.posterUrl,posterImage);
+                }
+                TextView emblem=text(posterEmblem(m),m.posterUrl.isEmpty()?35:22,Color.WHITE,true);emblem.setGravity(Gravity.CENTER);
                 LinearLayout.LayoutParams ep=params(-1,0);ep.weight=1;poster.addView(emblem,ep);
                 TextView genre=text(m.language.toUpperCase(Locale.ROOT)+"  ✦",9,Color.WHITE,true);poster.addView(genre);
                 TextView title=text(m.title,14,Color.WHITE,true);title.setMaxLines(2);title.setPadding(dp(3),dp(10),dp(3),0);card.addView(title);
@@ -336,10 +378,18 @@ public class MainActivity extends Activity {
                 if(parsed instanceof JSONArray)arr=(JSONArray)parsed;
                 else if(parsed instanceof JSONObject&&((JSONObject)parsed).opt("movies") instanceof JSONArray)arr=((JSONObject)parsed).getJSONArray("movies");
                 else if(parsed instanceof JSONObject&&((JSONObject)parsed).opt("results") instanceof JSONArray)arr=((JSONObject)parsed).getJSONArray("results");
+                else if(parsed instanceof JSONObject&&((JSONObject)parsed).opt("episodes") instanceof JSONArray)arr=((JSONObject)parsed).getJSONArray("episodes");
                 else throw new Exception("JSON needs an array, 'movies', or 'results'.");
                 ArrayList<Movie> loaded=new ArrayList<>();
-                for(int i=0;i<arr.length()&&i<200;i++){JSONObject o=arr.optJSONObject(i);if(o==null)continue;String title=o.optString("title",o.optString("name","Untitled"));String lang=o.optString("language",o.optString("lang","Other"));String year=o.optString("year","");String link=o.optString("url",o.optString("stream_url",o.optString("link","")));loaded.add(new Movie(title,lang,year,link));}
-                runOnUiThread(()->{movies.clear();movies.addAll(loaded);language="All";status.setText("Loaded "+loaded.size()+" catalogue entries.");render();((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(urlInput.getWindowToken(),0);});
+                for(int i=0;i<arr.length()&&i<200;i++){JSONObject o=arr.optJSONObject(i);if(o==null)continue;String title=o.optString("title",o.optString("name","Untitled"));String lang=o.optString("language",o.optString("lang","Other"));String year=o.optString("year","");String link=o.optString("url",o.optString("stream_url",o.optString("link","")));
+                    String g=o.optString("genre",o.optString("category","Other"));
+                    String poster=o.optString("poster_url",o.optString("poster",o.optString("image","")));
+                    String synopsis=o.optString("synopsis",o.optString("description",""));
+                    String series=o.optString("series",o.optString("show",""));
+                    String season=o.optString("season","");
+                    String episode=o.optString("episode",o.optString("episode_number",""));
+                    loaded.add(new Movie(title,lang,year,link,g,poster,synopsis,series,season,episode,""));}
+                runOnUiThread(()->{movies.clear();movies.addAll(loaded);language="All";genre="All";renderGenreChips();status.setText("Loaded "+loaded.size()+" catalogue entries.");render();((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).hideSoftInputFromWindow(urlInput.getWindowToken(),0);});
             }catch(Exception e){String msg=e.getMessage()==null?"Could not load catalogue":e.getMessage();runOnUiThread(()->status.setText("Catalogue error: "+msg));}
             finally{if(conn!=null)conn.disconnect();}
         });
