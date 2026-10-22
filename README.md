@@ -1,18 +1,22 @@
-# AnimeFlix Lite — Android project
+# AnimeFix Lite
 
-This is an Android WebView wrapper around the lightweight AnimeFlix Lite prototype.
+Lightweight Android movie/anime catalogue prototype, minimum Android 6.0 (API 23).
 
-## Build an APK
-The build runner used to prepare this ZIP does not have Android SDK/Gradle installed, so an APK has not been compiled here. The included GitHub Actions workflow builds a debug APK for you.
+## Build
+Open GitHub **Actions** → **Build AnimeFix Lite APK** → **Run workflow**. After a successful run, download the `AnimeFixLite-debug-apk` artifact. Extract the ZIP to get `app-debug.apk`.
 
-1. Create a GitHub repository and upload the contents of this folder.
-2. Open the repository's **Actions** tab.
-3. Run **Build AnimeFlix Lite APK** (or push to the `main` branch).
-4. Open the completed workflow run and download the `AnimeFlixLite-debug-apk` artifact.
-5. Extract the ZIP and install `app-debug.apk` on your Android phone. You may need to allow installation from that source.
+## Catalogue JSON
+The app accepts an HTTPS URL returning a JSON array, or an object with a `movies` or `results` array. Each entry supports:
+- `title` or `name`
+- `language` or `lang`
+- `year`
+- `url`, `stream_url`, or `link`
 
-## Notes
-- This is a prototype shell, not a finished streaming service.
-- The demo movie cards are placeholders.
-- Source loading needs a compatible HTTPS JSON catalog/API. Some source servers block cross-origin requests; those require a proper backend/API adapter.
-- Only use media/catalog sources you are authorized to access.
+Example:
+```json
+[
+  {"title":"Example Anime","language":"Japanese","year":"2025","url":"https://example.com/watch"}
+]
+```
+
+Only use catalogues and media you are authorized to access. This prototype is a catalogue app, not a bundled streaming library; it does not bypass logins, DRM, paywalls, or source restrictions.
