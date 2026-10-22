@@ -140,6 +140,15 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams stp=params(-1,-2);stp.topMargin=dp(6);root.addView(status,stp);
         list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams lp=params(-1,-2);lp.topMargin=dp(14);root.addView(list,lp);
+        
+        LinearLayout continueFolder = folder(root, "◷", "Continue Watching", "Your last played series or movie is saved automatically", 18);
+        LinearLayout continueBody = folderBody(continueFolder);
+        TextView continueInfo = text("No recent video yet. Play a title or direct video and it will appear here.",12,Color.rgb(158,171,205),false);
+        continueBody.addView(continueInfo);
+        Button resumeLast = new Button(this);resumeLast.setText("▶  Resume last video");resumeLast.setAllCaps(false);resumeLast.setTextColor(Color.BLACK);resumeLast.setBackground(round(cyan,12));
+        LinearLayout.LayoutParams rlp=params(-1,dp(46));rlp.topMargin=dp(10);continueBody.addView(resumeLast,rlp);
+        resumeLast.setOnClickListener(v->resumeLastVideo());
+        refreshContinueWatching(continueInfo, resumeLast);
 
         // Separate expandable folders keep the home catalogue clean.
         LinearLayout catalogueFolder = folder(root, "▤", "Catalogue Settings", "Load or refresh your HTTPS JSON catalogue", 18);
@@ -192,6 +201,30 @@ public class MainActivity extends Activity {
     }
     private LinearLayout folderBody(LinearLayout folder){
         return (LinearLayout)folder.getChildAt(1);
+    }
+    private void refreshContinueWatching(TextView info,Button resume){
+        android.content.SharedPreferences prefs=getSharedPreferences("zerox_playback",MODE_PRIVATE);
+        String title=prefs.getString("last_title","");
+        String url=prefs.getString("last_url","");
+        long position=prefs.getLong("last_position",0L);
+        if(url.isEmpty()){
+            info.setText("No recent video yet. Play a title or direct video and it will appear here.");
+            resume.setEnabled(false);resume.setAlpha(0.5f);
+        }else{
+            info.setText("Last watched: "+(title.isEmpty()?"Untitled video":title)+"\\nSaved position: "+formatTime(position));
+            resume.setEnabled(true);resume.setAlpha(1f);
+        }
+    }
+    private String formatTime(long ms){
+        long total=Math.max(0,ms)/1000;return String.format(Locale.ROOT,"%02d:%02d",total/60,total%60);
+    }
+    private void resumeLastVideo(){
+        android.content.SharedPreferences prefs=getSharedPreferences("zerox_playback",MODE_PRIVATE);
+        String url=prefs.getString("last_url","");String title=prefs.getString("last_title","Last video");
+        long position=prefs.getLong("last_position",0L);
+        if(url.isEmpty()){Toast.makeText(this,"Nothing to resume yet",Toast.LENGTH_SHORT).show();return;}
+        try{Intent i=new Intent(this,PlayerActivity.class);i.putExtra("url",url);i.putExtra("title",title);i.putExtra("resume_position",position);startActivity(i);}
+        catch(Exception e){Toast.makeText(this,"Cannot resume video",Toast.LENGTH_SHORT).show();}
     }
     private void addSample(String t,String l,String y){movies.add(new Movie(t,l,y,""));}
     private EditText input(String hint){EditText e=new EditText(this);e.setSingleLine(true);e.setTextColor(Color.WHITE);e.setHintTextColor(Color.rgb(125,137,169));e.setHint(hint);e.setTextSize(13);e.setPadding(dp(14),dp(10),dp(14),dp(10));e.setBackground(round(panel2,13));e.setSelectAllOnFocus(false);return e;}
