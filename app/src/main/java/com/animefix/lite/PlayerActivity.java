@@ -46,12 +46,12 @@ public class PlayerActivity extends Activity {
         playerView.setPlayer(player);
         player.addListener(new Player.Listener(){
             @Override public void onPlayerError(PlaybackException error){
-                String details = "Playback failed: " + error.errorCodeName;
+                String details = "Playback failed: " + PlaybackException.getErrorCodeName(error.errorCode);
                 if (error.getCause() != null && error.getCause().getMessage() != null) {
                     details += "\\n" + error.getCause().getMessage();
                 }
                 statusView.setText(details + "\\nTry opening the same HTTPS URL in Nox Browser to check connectivity.");
-                Toast.makeText(PlayerActivity.this, "Video failed: " + error.errorCodeName, Toast.LENGTH_LONG).show();
+                Toast.makeText(PlayerActivity.this, "Video failed: " + PlaybackException.getErrorCodeName(error.errorCode), Toast.LENGTH_LONG).show();
             }
             @Override public void onPlaybackStateChanged(int playbackState) {
                 if (playbackState == Player.STATE_BUFFERING) statusView.setText("Buffering video…");
