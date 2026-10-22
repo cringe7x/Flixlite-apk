@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
     private LinearLayout list;
     private EditText search, urlInput;
     private TextView status;
-    private String language = "All";
+    private String language = "Hindi";
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
 
     static class Movie {
@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(bg);
         getWindow().setNavigationBarColor(bg);
         buildUi();
+        addSample("Sample: Hindi Movie Catalogue", "Hindi", "2025");
         addSample("Sample: River of Stars", "Japanese", "2025");
         addSample("Sample: Dhaka Memories", "Bangla", "2024");
         addSample("Sample: Moonlight Academy", "Korean", "2025");
@@ -70,7 +71,7 @@ public class MainActivity extends Activity {
         HorizontalScrollView hsv = new HorizontalScrollView(this);
         hsv.setHorizontalScrollBarEnabled(false);
         LinearLayout chips = new LinearLayout(this); chips.setOrientation(LinearLayout.HORIZONTAL);
-        String[] langs={"All","Bangla","English","Japanese","Mandarin","Korean","Other"};
+        String[] langs={"Hindi","All","Bangla","English","Japanese","Mandarin","Korean","Other"};
         for(String l:langs) {
             Button b = new Button(this); b.setText(l); b.setTextSize(12); b.setAllCaps(false);
             b.setTextColor(Color.WHITE); b.setPadding(dp(8),0,dp(8),0);
@@ -81,7 +82,7 @@ public class MainActivity extends Activity {
         }
         hsv.addView(chips); LinearLayout.LayoutParams hp=params(-1,-2);hp.topMargin=dp(12);root.addView(hsv,hp);
         TextView heading=text("Discover",19,Color.WHITE,true); LinearLayout.LayoutParams hdp=params(-1,-2);hdp.topMargin=dp(18);root.addView(heading,hdp);
-        TextView note=text("Sample entries are placeholders. Add a public HTTPS JSON catalogue you are authorized to use.",12,Color.LTGRAY,false);root.addView(note);
+        TextView note=text("Hindi is selected first. Sample entries are placeholders. Add a public HTTPS JSON catalogue you are authorized to use.",12,Color.LTGRAY,false);root.addView(note);
         status=text("Ready. Load a catalogue to show its titles.",12,purple,false);LinearLayout.LayoutParams stp=params(-1,-2);stp.topMargin=dp(8);root.addView(status,stp);
         list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);LinearLayout.LayoutParams lp=params(-1,-2);lp.topMargin=dp(8);root.addView(list,lp);
         TextView add=text("Add a catalogue",19,Color.WHITE,true);LinearLayout.LayoutParams ap=params(-1,-2);ap.topMargin=dp(20);root.addView(add,ap);
