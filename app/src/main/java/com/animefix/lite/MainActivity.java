@@ -53,12 +53,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(bg);
         getWindow().setNavigationBarColor(bg);
         buildUi();
-        addSample("Beyond the Sky", "Hindi", "2025");
-        addSample("River of Stars", "Japanese", "2025");
-        addSample("Dhaka Memories", "Bangla", "2024");
-        addSample("Moonlight Academy", "Korean", "2025");
-        addSample("Neon Samurai", "Japanese", "2024");
-        addSample("Midnight Promise", "English", "2025");
+        // Start with a genuinely empty catalogue; never present fictional demo titles as real content.
         renderGenreChips();
         render();
     }
@@ -189,6 +184,13 @@ public class MainActivity extends Activity {
         LinearLayout settingsBody = folderBody(settingsFolder);
         TextView appInfo=text("ZEROX TV  •  Version 1.0\nNeon anime theme  •  Media3 player\nCatalogue and direct playback require public HTTPS sources.",12,Color.rgb(184,194,220),false);
         settingsBody.addView(appInfo);
+        Button providerRepos=new Button(this);
+        providerRepos.setText("Manage provider repositories");
+        providerRepos.setAllCaps(false);
+        providerRepos.setTextColor(Color.WHITE);
+        providerRepos.setBackground(roundGradient(new int[]{purple,Color.rgb(94,93,255)},12));
+        LinearLayout.LayoutParams prp=params(-1,dp(46));prp.topMargin=dp(10);settingsBody.addView(providerRepos,prp);
+        providerRepos.setOnClickListener(v->openProviderRepositories());
         Button clearSearch=new Button(this);clearSearch.setText("Clear search");clearSearch.setAllCaps(false);clearSearch.setTextColor(Color.WHITE);clearSearch.setBackground(round(panel2,12));
         LinearLayout.LayoutParams csp=params(-1,dp(44));csp.topMargin=dp(10);settingsBody.addView(clearSearch,csp);
         clearSearch.setOnClickListener(v->{if(search!=null)search.setText("");language="All";render();Toast.makeText(this,"Search cleared",Toast.LENGTH_SHORT).show();});
@@ -395,5 +397,76 @@ public class MainActivity extends Activity {
             finally{if(conn!=null)conn.disconnect();}
         });
     }
+
+    private static final String[] DEFAULT_PROVIDER_REPOS = new String[]{
+        "https://raw.githubusercontent.com/SaurabhKaperwan/CSX/builds/CS.json",
+        "https://raw.githubusercontent.com/dipender98/Indflix/builds/repo.json",
+        "https://raw.githubusercontent.com/redowan99/Redowan-CloudStream/master/repo.json",
+        "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/refs/heads/builds/repo.json",
+        "https://raw.githubusercontent.com/yoruix/nuvio-providers/refs/heads/main/manifest.json",
+        "https://raw.githubusercontent.com/phisher98/phisher-nuvio-providers/refs/heads/main/manifest.json",
+        "https://raw.githubusercontent.com/D3adlyRocket/All-in-One-Nuvio/refs/heads/main/manifest.json",
+        "https://raw.githubusercontent.com/Abinanthankv/NuvioRepo/refs/heads/master/manifest.json",
+        "https://raw.githubusercontent.com/michat88/nuvio-providers/refs/heads/main/manifest.json",
+        "https://raw.githubusercontent.com/hihihihihiiray/plugins/refs/heads/main/manifest.json"
+    };
+
+    private ArrayList<String> getProviderRepos(){
+        android.content.SharedPreferences prefs=getSharedPreferences("zerox_provider_repos",MODE_PRIVATE);
+        String stored=prefs.getString("repos","");
+        ArrayList<String> out=new ArrayList<>();
+        if(stored.isEmpty()){for(String s:DEFAULT_PROVIDER_REPOS)out.add(s);}
+        else {for(String s:stored.split("\\n"))if(s.startsWith("https://"))out.add(s);}
+        return out;
+    }
+    private void saveProviderRepos(ArrayList<String> repos){
+        StringBuilder b=new StringBuilder();
+        for(String s:repos){if(b.length()>0)b.append("\\n");b.append(s);}
+        getSharedPreferences("zerox_provider_repos",MODE_PRIVATE).edit().putString("repos",b.toString()).apply();
+    }
+    private void openProviderRepositories(){
+        LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);box.setPadding(dp(18),dp(8),dp(18),dp(4));
+        TextView explanation=text("Add HTTPS repository manifests and inspect available provider metadata. A manifest is not itself a playback engine; compatible plugin runtimes are still required.",12,Color.rgb(184,194,220),false);
+        box.addView(explanation);
+        EditText entry=input("https://.../manifest.json or repo.json");
+        LinearLayout.LayoutParams ep=params(-1,dp(48));ep.topMargin=dp(10);box.addView(entry,ep);
+        LinearLayout actions=new LinearLayout(this);actions.setOrientation(LinearLayout.HORIZONTAL);
+        Button add=new Button(this);add.setText("Add URL");add.setAllCaps(false);add.setTextColor(Color.BLACK);add.setBackground(round(cyan,10));
+        actions.addView(add,new LinearLayout.LayoutParams(0,dp(44),1));
+        Button refresh=new Button(this);refresh.setText("Check repos");refresh.setAllCaps(false);refresh.setTextColor(Color.WHITE);refresh.setBackground(round(panel2,10));
+        LinearLayout.LayoutParams rf=params(0,dp(44));rf.leftMargin=dp(8);actions.addView(refresh,new LinearLayout.LayoutParams(0,dp(44),1));
+        LinearLayout.LayoutParams acp=params(-1,-2);acp.topMargin=dp(8);box.addView(actions,acp);
+        TextView result=text("",12,Color.rgb(184,194,220),false);result.setPadding(0,dp(10),0,0);box.addView(result);
+        ArrayList<String> repos=getProviderRepos();
+        Runnable showRepos=()->{StringBuilder b=new StringBuilder("Configured repositories ("+repos.size()+")\\n");for(int i=0;i<repos.size();i++)b.append(i+1).append(". ").append(repos.get(i)).append("\\n");result.setText(b.toString());};
+        showRepos.run();
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Provider repositories").setView(box).setNegativeButton("Close",null).create();
+        add.setOnClickListener(v->{String u=entry.getText().toString().trim();if(!u.startsWith("https://")||!(u.endsWith(".json")||u.contains(".json?"))){result.setText("Enter a valid HTTPS JSON manifest URL.");return;}if(repos.contains(u)){result.setText("That repository is already configured.");return;}repos.add(u);saveProviderRepos(repos);entry.setText("");showRepos.run();});
+        refresh.setOnClickListener(v->{refresh.setEnabled(false);result.setText("Checking repository manifests…");worker.execute(()->{
+            StringBuilder summary=new StringBuilder();
+            for(String u:new ArrayList<>(repos)){
+                HttpURLConnection conn=null;
+                try{
+                    conn=(HttpURLConnection)new URL(u).openConnection();conn.setConnectTimeout(8000);conn.setReadTimeout(10000);conn.setRequestProperty("Accept","application/json");conn.setRequestProperty("User-Agent","ZeroxTV/1.0");
+                    int code=conn.getResponseCode();if(code<200||code>=300)throw new Exception("HTTP "+code);
+                    BufferedReader rd=new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF-8"));StringBuilder raw=new StringBuilder();String line;while((line=rd.readLine())!=null&&raw.length()<1500000)raw.append(line);rd.close();
+                    Object parsed=new JSONTokener(raw.toString()).nextValue();int count=0;String type="Unknown manifest";
+                    if(parsed instanceof JSONObject){JSONObject obj=(JSONObject)parsed;
+                        JSONArray scrapers=obj.optJSONArray("scrapers");JSONArray plugins=obj.optJSONArray("plugins");JSONArray lists=obj.optJSONArray("pluginLists");
+                        if(scrapers!=null){count=scrapers.length();type="Nuvio JS providers";}
+                        else if(plugins!=null){count=plugins.length();type="CloudStream plugin entries";}
+                        else if(lists!=null){type="CloudStream repository";count=lists.length();}
+                        else if(obj.optJSONArray("repositories")!=null){count=obj.optJSONArray("repositories").length();type="Repository list";}
+                    }else if(parsed instanceof JSONArray){count=((JSONArray)parsed).length();type="Extension list";}
+                    summary.append("✓ ").append(type).append(" — ").append(count).append(" entries\\n").append(u).append("\\n\\n");
+                }catch(Exception e){summary.append("✕ Unavailable/invalid: ").append(e.getMessage()==null?"error":e.getMessage()).append("\\n").append(u).append("\\n\\n");}
+                finally{if(conn!=null)conn.disconnect();}
+            }
+            summary.append("Important: this check reads manifest metadata only. It does not execute scraper code or prove that a stream can be played.");
+            runOnUiThread(()->{refresh.setEnabled(true);result.setText(summary.toString());});
+        });});
+        dialog.show();
+    }
+
     @Override protected void onDestroy(){worker.shutdownNow();super.onDestroy();}
 }
