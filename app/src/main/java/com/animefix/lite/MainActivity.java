@@ -119,7 +119,7 @@ public class MainActivity extends Activity {
         HorizontalScrollView hsv = new HorizontalScrollView(this);
         hsv.setHorizontalScrollBarEnabled(false);
         LinearLayout chips = new LinearLayout(this); chips.setOrientation(LinearLayout.HORIZONTAL);
-        String[] langs={"Hindi","All","Bangla","English","Japanese","Mandarin","Korean","Other"};
+        String[] langs={"Hindi","All","Favorites","Bangla","English","Japanese","Mandarin","Korean","Other"};
         for(String l:langs) {
             TextView chip = text(l,12,language.equals(l)?Color.BLACK:Color.rgb(217,224,246),true);
             chip.setGravity(Gravity.CENTER); chip.setPadding(dp(15),0,dp(15),0);
@@ -226,6 +226,10 @@ public class MainActivity extends Activity {
         try{Intent i=new Intent(this,PlayerActivity.class);i.putExtra("url",url);i.putExtra("title",title);i.putExtra("resume_position",position);startActivity(i);}
         catch(Exception e){Toast.makeText(this,"Cannot resume video",Toast.LENGTH_SHORT).show();}
     }
+    private String favoriteKey(Movie m){return "fav_"+Integer.toHexString((m.title+"|"+m.language+"|"+m.year+"|"+m.link).hashCode());}
+    private boolean isFavorite(Movie m){return getSharedPreferences("zerox_favorites",MODE_PRIVATE).getBoolean(favoriteKey(m),false);}
+    private void setFavorite(Movie m,boolean saved){getSharedPreferences("zerox_favorites",MODE_PRIVATE).edit().putBoolean(favoriteKey(m),saved).apply();}
+
     private void addSample(String t,String l,String y){movies.add(new Movie(t,l,y,""));}
     private EditText input(String hint){EditText e=new EditText(this);e.setSingleLine(true);e.setTextColor(Color.WHITE);e.setHintTextColor(Color.rgb(125,137,169));e.setHint(hint);e.setTextSize(13);e.setPadding(dp(14),dp(10),dp(14),dp(10));e.setBackground(round(panel2,13));e.setSelectAllOnFocus(false);return e;}
     private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(Typeface.DEFAULT,bold?Typeface.BOLD:Typeface.NORMAL);return t;}
@@ -240,7 +244,8 @@ public class MainActivity extends Activity {
         String q=search==null?"":search.getText().toString().toLowerCase(Locale.ROOT);
         ArrayList<Movie> visible=new ArrayList<>();
         for(Movie m:movies){
-            if(!language.equals("All")&&!m.language.equalsIgnoreCase(language))continue;
+            if(language.equals("Favorites")&&!isFavorite(m))continue;
+            if(!language.equals("All")&&!language.equals("Favorites")&&!m.language.equalsIgnoreCase(language))continue;
             if(!(m.title+" "+m.language+" "+m.year).toLowerCase(Locale.ROOT).contains(q))continue;
             visible.add(m);
         }
@@ -268,6 +273,9 @@ public class MainActivity extends Activity {
                 TextView title=text(m.title,14,Color.WHITE,true);title.setMaxLines(2);title.setPadding(dp(3),dp(10),dp(3),0);card.addView(title);
                 TextView meta=text(m.year.isEmpty()?m.language:m.year+"  •  "+m.language,10,Color.rgb(151,165,199),false);
                 meta.setPadding(dp(3),dp(4),dp(3),0);card.addView(meta);
+                Button favorite=new Button(this);favorite.setText(isFavorite(m)?"★  Saved":"☆  Add to favorites");favorite.setTextSize(10);favorite.setAllCaps(false);favorite.setTextColor(isFavorite(m)?cyan:Color.WHITE);favorite.setBackground(round(panel2,9));
+                LinearLayout.LayoutParams favp=params(-1,dp(34));favp.topMargin=dp(7);card.addView(favorite,favp);
+                favorite.setOnClickListener(v->{boolean saved=isFavorite(m);setFavorite(m,!saved);favorite.setText(!saved?"★  Saved":"☆  Add to favorites");favorite.setTextColor(!saved?cyan:Color.WHITE);if(language.equals("Favorites"))render();});
                 if(m.link!=null&&!m.link.isEmpty()){
                     Button open=new Button(this);open.setText("▶ Play");open.setTextSize(11);open.setAllCaps(false);open.setTextColor(Color.BLACK);open.setBackground(round(cyan,9));
                     LinearLayout.LayoutParams op=params(-1,dp(38));op.topMargin=dp(9);card.addView(open,op);
