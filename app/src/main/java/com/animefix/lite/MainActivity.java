@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.content.Intent;
-import android.net.Uri;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -25,7 +24,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
-    private final int bg = Color.rgb(16,17,26), panel = Color.rgb(27,29,43), purple = Color.rgb(164,132,255);
+    private final int bg = Color.rgb(8, 10, 22);
+    private final int panel = Color.rgb(19, 23, 43);
+    private final int panel2 = Color.rgb(27, 32, 58);
+    private final int purple = Color.rgb(166, 93, 255);
+    private final int cyan = Color.rgb(51, 229, 255);
     private final ArrayList<Movie> movies = new ArrayList<>();
     private LinearLayout list;
     private EditText search, urlInput, manualUrlInput;
@@ -43,81 +46,191 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(bg);
         getWindow().setNavigationBarColor(bg);
         buildUi();
-        addSample("Sample: Hindi Movie Catalogue", "Hindi", "2025");
-        addSample("Sample: River of Stars", "Japanese", "2025");
-        addSample("Sample: Dhaka Memories", "Bangla", "2024");
-        addSample("Sample: Moonlight Academy", "Korean", "2025");
+        addSample("Beyond the Sky", "Hindi", "2025");
+        addSample("River of Stars", "Japanese", "2025");
+        addSample("Dhaka Memories", "Bangla", "2024");
+        addSample("Moonlight Academy", "Korean", "2025");
+        addSample("Neon Samurai", "Japanese", "2024");
+        addSample("Midnight Promise", "English", "2025");
         render();
     }
 
     private void buildUi() {
         ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
         scroll.setBackgroundColor(bg);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(16),dp(20),dp(16),dp(24));
+        root.setPadding(dp(18),dp(16),dp(18),dp(28));
         scroll.addView(root);
-        TextView brand = text("Zerox TV", 27, Color.WHITE, true);
-        root.addView(brand);
-        TextView subtitle = text("Anime • Movies • Streaming", 13, Color.LTGRAY, false);
-        root.addView(subtitle);
-        search = input("Search title or language…");
-        LinearLayout.LayoutParams sp = params(-1,-2); sp.topMargin=dp(18); root.addView(search,sp);
+
+        LinearLayout top = new LinearLayout(this);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout logo = new LinearLayout(this);
+        logo.setGravity(Gravity.CENTER);
+        logo.setBackground(roundGradient(new int[]{purple, cyan}, 15));
+        TextView x = text("X", 23, Color.WHITE, true);
+        x.setGravity(Gravity.CENTER);
+        logo.addView(x, params(dp(46),dp(46)));
+        top.addView(logo, params(dp(46),dp(46)));
+        LinearLayout brandStack = new LinearLayout(this);
+        brandStack.setOrientation(LinearLayout.VERTICAL);
+        brandStack.setPadding(dp(11),0,0,0);
+        brandStack.addView(text("ZEROX TV", 22, Color.WHITE, true));
+        brandStack.addView(text("ANIME  •  MOVIES  •  SERIES", 9, cyan, true));
+        top.addView(brandStack, new LinearLayout.LayoutParams(0,-2,1));
+        TextView live = text("●  LIVE", 10, cyan, true);
+        live.setPadding(dp(10),dp(7),dp(10),dp(7));
+        live.setBackground(round(panel2,18));
+        top.addView(live);
+        root.addView(top);
+
+        TextView greeting = text("Your next obsession.", 27, Color.WHITE, true);
+        LinearLayout.LayoutParams gp=params(-1,-2); gp.topMargin=dp(24); root.addView(greeting,gp);
+        TextView sub = text("A universe of stories, all in one place.", 13, Color.rgb(163,174,204), false);
+        LinearLayout.LayoutParams subp=params(-1,-2); subp.topMargin=dp(4); root.addView(sub,subp);
+
+        search = input("⌕   Search anime, movies, language...");
+        LinearLayout.LayoutParams sp=params(-1,dp(52)); sp.topMargin=dp(18); root.addView(search,sp);
         search.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s,int st,int c,int a) {}
             public void onTextChanged(CharSequence s,int st,int before,int count) { render(); }
             public void afterTextChanged(Editable e) {}
         });
+
+        LinearLayout hero = new LinearLayout(this);
+        hero.setOrientation(LinearLayout.VERTICAL);
+        hero.setPadding(dp(18),dp(18),dp(18),dp(18));
+        hero.setBackground(roundGradient(new int[]{Color.rgb(45,24,83),Color.rgb(13,67,91),Color.rgb(20,25,51)},20));
+        LinearLayout.LayoutParams herop=params(-1,dp(176)); herop.topMargin=dp(18); root.addView(hero,herop);
+        TextView tag=text("✦  EDITOR'S PICK",10,cyan,true); hero.addView(tag);
+        TextView feature=text("BEYOND\nTHE SKY",25,Color.WHITE,true);
+        LinearLayout.LayoutParams fp=params(-1,-2); fp.topMargin=dp(8); hero.addView(feature,fp);
+        TextView fmeta=text("Anime film  •  2025  •  Adventure",11,Color.rgb(216,223,245),false);
+        LinearLayout.LayoutParams fmp=params(-1,-2); fmp.topMargin=dp(3); hero.addView(fmeta,fmp);
+        Button explore = new Button(this); explore.setText("Explore catalogue  →"); explore.setAllCaps(false); explore.setTextSize(12);
+        explore.setTextColor(Color.WHITE); explore.setBackground(roundGradient(new int[]{purple,Color.rgb(104,90,255)},12));
+        LinearLayout.LayoutParams ebp=params(dp(178),dp(40)); ebp.topMargin=dp(10); hero.addView(explore,ebp);
+        explore.setOnClickListener(v->{ if(list!=null) list.requestFocus(); scroll.smoothScrollTo(0,list.getTop()); });
+
+        TextView categories=text("BROWSE BY LANGUAGE",10,Color.rgb(150,164,201),true);
+        LinearLayout.LayoutParams catp=params(-1,-2);catp.topMargin=dp(22);root.addView(categories,catp);
         HorizontalScrollView hsv = new HorizontalScrollView(this);
         hsv.setHorizontalScrollBarEnabled(false);
         LinearLayout chips = new LinearLayout(this); chips.setOrientation(LinearLayout.HORIZONTAL);
         String[] langs={"Hindi","All","Bangla","English","Japanese","Mandarin","Korean","Other"};
         for(String l:langs) {
-            Button b = new Button(this); b.setText(l); b.setTextSize(12); b.setAllCaps(false);
-            b.setTextColor(Color.WHITE); b.setPadding(dp(8),0,dp(8),0);
-            b.setBackground(round(language.equals(l)?purple:panel,22));
-            if(language.equals(l)) b.setTextColor(Color.BLACK);
-            LinearLayout.LayoutParams cp=params(-2,dp(42)); cp.rightMargin=dp(6); chips.addView(b,cp);
-            b.setOnClickListener(v->{language=l; for(int i=0;i<chips.getChildCount();i++){Button x=(Button)chips.getChildAt(i);boolean on=x.getText().toString().equals(language);x.setBackground(round(on?purple:panel,22));x.setTextColor(on?Color.BLACK:Color.WHITE);} render();});
+            TextView chip = text(l,12,language.equals(l)?Color.BLACK:Color.rgb(217,224,246),true);
+            chip.setGravity(Gravity.CENTER); chip.setPadding(dp(15),0,dp(15),0);
+            chip.setBackground(round(language.equals(l)?cyan:panel2,22));
+            LinearLayout.LayoutParams cp=params(-2,dp(38)); cp.rightMargin=dp(7); chips.addView(chip,cp);
+            chip.setOnClickListener(v->{language=l; for(int i=0;i<chips.getChildCount();i++){TextView c=(TextView)chips.getChildAt(i);boolean on=c.getText().toString().equals(language);c.setBackground(round(on?cyan:panel2,22));c.setTextColor(on?Color.BLACK:Color.rgb(217,224,246));} render();});
         }
-        hsv.addView(chips); LinearLayout.LayoutParams hp=params(-1,-2);hp.topMargin=dp(12);root.addView(hsv,hp);
-        TextView heading=text("Discover",19,Color.WHITE,true); LinearLayout.LayoutParams hdp=params(-1,-2);hdp.topMargin=dp(18);root.addView(heading,hdp);
-        TextView note=text("Hindi is selected first. Sample entries are placeholders. Add a public HTTPS JSON catalogue you are authorized to use.",12,Color.LTGRAY,false);root.addView(note);
-        status=text("Ready. Load a catalogue to show its titles.",12,purple,false);LinearLayout.LayoutParams stp=params(-1,-2);stp.topMargin=dp(8);root.addView(status,stp);
-        list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);LinearLayout.LayoutParams lp=params(-1,-2);lp.topMargin=dp(8);root.addView(list,lp);
-        TextView add=text("Add a catalogue",19,Color.WHITE,true);LinearLayout.LayoutParams ap=params(-1,-2);ap.topMargin=dp(20);root.addView(add,ap);
-        urlInput=input("https://example.com/catalog.json");LinearLayout.LayoutParams up=params(-1,-2);up.topMargin=dp(8);root.addView(urlInput,up);
-        Button load=new Button(this);load.setText("Load catalogue");load.setAllCaps(false);load.setTextColor(Color.BLACK);load.setBackground(round(purple,12));LinearLayout.LayoutParams bp=params(-1,dp(48));bp.topMargin=dp(8);root.addView(load,bp);load.setOnClickListener(v->loadCatalogue());
-        TextView manualTitle=text("Play a video URL",19,Color.WHITE,true); LinearLayout.LayoutParams mtp=params(-1,-2);mtp.topMargin=dp(22);root.addView(manualTitle,mtp);
-        manualUrlInput=input("https://example.com/video.mp4"); LinearLayout.LayoutParams mup=params(-1,-2);mup.topMargin=dp(8);root.addView(manualUrlInput,mup);
-        Button playUrl=new Button(this);playUrl.setText("Play URL in app");playUrl.setAllCaps(false);playUrl.setTextColor(Color.BLACK);playUrl.setBackground(round(purple,12));LinearLayout.LayoutParams pup=params(-1,dp(48));pup.topMargin=dp(8);root.addView(playUrl,pup);playUrl.setOnClickListener(v->playManualUrl());
-        TextView format=text("JSON format: an array of objects, or an object containing ‘movies’ or ‘results’. Fields: title/name, language/lang, year, url/link/stream_url. Only authorized HTTPS sources are supported; this app does not bypass logins or DRM.",12,Color.LTGRAY,false);LinearLayout.LayoutParams fp=params(-1,-2);fp.topMargin=dp(12);root.addView(format,fp);
+        hsv.addView(chips); LinearLayout.LayoutParams hp=params(-1,-2);hp.topMargin=dp(10);root.addView(hsv,hp);
+
+        LinearLayout section = new LinearLayout(this);
+        section.setGravity(Gravity.CENTER_VERTICAL);
+        section.setOrientation(LinearLayout.HORIZONTAL);
+        TextView heading=text("Discover",22,Color.WHITE,true);
+        section.addView(heading,new LinearLayout.LayoutParams(0,-2,1));
+        TextView badge=text("POSTER GRID",9,cyan,true);badge.setPadding(dp(9),dp(6),dp(9),dp(6));badge.setBackground(round(panel2,12));section.addView(badge);
+        LinearLayout.LayoutParams sh=params(-1,-2);sh.topMargin=dp(24);root.addView(section,sh);
+        status=text("Ready • Load your authorized catalogue to see titles.",11,Color.rgb(158,171,205),false);
+        LinearLayout.LayoutParams stp=params(-1,-2);stp.topMargin=dp(6);root.addView(status,stp);
+        list=new LinearLayout(this);list.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams lp=params(-1,-2);lp.topMargin=dp(14);root.addView(list,lp);
+
+        TextView add=text("Catalogue settings",20,Color.WHITE,true);
+        LinearLayout.LayoutParams ap=params(-1,-2);ap.topMargin=dp(28);root.addView(add,ap);
+        TextView helper=text("Paste a public HTTPS JSON catalogue you are allowed to use.",12,Color.rgb(158,171,205),false);
+        LinearLayout.LayoutParams helperp=params(-1,-2);helperp.topMargin=dp(5);root.addView(helper,helperp);
+        urlInput=input("https://example.com/catalog.json");
+        LinearLayout.LayoutParams up=params(-1,dp(50));up.topMargin=dp(10);root.addView(urlInput,up);
+        Button load=new Button(this);load.setText("Load catalogue");load.setAllCaps(false);load.setTextColor(Color.WHITE);load.setBackground(roundGradient(new int[]{purple,Color.rgb(94,93,255)},12));
+        LinearLayout.LayoutParams bp=params(-1,dp(48));bp.topMargin=dp(8);root.addView(load,bp);load.setOnClickListener(v->loadCatalogue());
+
+        TextView manualTitle=text("Play a direct video URL",20,Color.WHITE,true);
+        LinearLayout.LayoutParams mtp=params(-1,-2);mtp.topMargin=dp(24);root.addView(manualTitle,mtp);
+        TextView manualHint=text("MP4, HLS or other supported direct stream URL",12,Color.rgb(158,171,205),false);
+        LinearLayout.LayoutParams mhp=params(-1,-2);mhp.topMargin=dp(4);root.addView(manualHint,mhp);
+        manualUrlInput=input("https://example.com/video.mp4");
+        LinearLayout.LayoutParams mup=params(-1,dp(50));mup.topMargin=dp(10);root.addView(manualUrlInput,mup);
+        Button playUrl=new Button(this);playUrl.setText("▶   Play in Zerox TV");playUrl.setAllCaps(false);playUrl.setTextColor(Color.BLACK);playUrl.setBackground(round(cyan,12));
+        LinearLayout.LayoutParams pup=params(-1,dp(48));pup.topMargin=dp(8);root.addView(playUrl,pup);playUrl.setOnClickListener(v->playManualUrl());
+        TextView format=text("JSON: array or object containing movies/results. Fields: title/name, language/lang, year, url/link/stream_url. HTTPS sources only; no login or DRM bypass.",11,Color.rgb(132,145,177),false);
+        LinearLayout.LayoutParams formatp=params(-1,-2);formatp.topMargin=dp(12);root.addView(format,formatp);
         setContentView(scroll);
     }
 
     private void addSample(String t,String l,String y){movies.add(new Movie(t,l,y,""));}
-    private EditText input(String hint){EditText e=new EditText(this);e.setSingleLine(true);e.setTextColor(Color.WHITE);e.setHintTextColor(Color.GRAY);e.setHint(hint);e.setTextSize(14);e.setPadding(dp(12),dp(10),dp(12),dp(10));e.setBackground(round(panel,12));return e;}
-    private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return t;}
+    private EditText input(String hint){EditText e=new EditText(this);e.setSingleLine(true);e.setTextColor(Color.WHITE);e.setHintTextColor(Color.rgb(125,137,169));e.setHint(hint);e.setTextSize(13);e.setPadding(dp(14),dp(10),dp(14),dp(10));e.setBackground(round(panel2,13));e.setSelectAllOnFocus(false);return e;}
+    private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);if(bold)t.setTypeface(Typeface.DEFAULT,bold?Typeface.BOLD:Typeface.NORMAL);return t;}
     private GradientDrawable round(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
+    private GradientDrawable roundGradient(int[] colors,int radius){GradientDrawable d=new GradientDrawable(GradientDrawable.Orientation.TL_BR,colors);d.setCornerRadius(dp(radius));return d;}
     private LinearLayout.LayoutParams params(int w,int h){return new LinearLayout.LayoutParams(w,h);}
     private int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+0.5f);}
 
     private void render(){
         if(list==null)return;
-        list.removeAllViews();String q=search==null?"":search.getText().toString().toLowerCase(Locale.ROOT);int count=0;
+        list.removeAllViews();
+        String q=search==null?"":search.getText().toString().toLowerCase(Locale.ROOT);
+        ArrayList<Movie> visible=new ArrayList<>();
         for(Movie m:movies){
             if(!language.equals("All")&&!m.language.equalsIgnoreCase(language))continue;
             if(!(m.title+" "+m.language+" "+m.year).toLowerCase(Locale.ROOT).contains(q))continue;
-            LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);card.setPadding(dp(14),dp(13),dp(14),dp(13));card.setBackground(round(panel,14));LinearLayout.LayoutParams cparams=params(-1,-2);cparams.bottomMargin=dp(9);list.addView(card,cparams);
-            TextView title=text(m.title,16,Color.WHITE,true);card.addView(title);
-            TextView meta=text(m.language+(m.year.isEmpty()?"":" · "+m.year),12,Color.LTGRAY,false);LinearLayout.LayoutParams mp=params(-1,-2);mp.topMargin=dp(5);card.addView(meta,mp);
-            if(m.link!=null&&!m.link.isEmpty()){
-                Button open=new Button(this);open.setText("Play in app");open.setAllCaps(false);open.setTextColor(Color.BLACK);open.setBackground(round(purple,10));LinearLayout.LayoutParams op=params(-1,dp(44));op.topMargin=dp(8);card.addView(open,op);
-                open.setOnClickListener(v->openPlayer(m.link,m.title));
-            }else{TextView sample=text("Catalogue preview",11,Color.GRAY,false);LinearLayout.LayoutParams sm=params(-1,-2);sm.topMargin=dp(5);card.addView(sample,sm);}
-            count++;
+            visible.add(m);
         }
-        if(count==0){TextView empty=text("No titles found. Try another search or language.",13,Color.LTGRAY,false);empty.setGravity(Gravity.CENTER);empty.setPadding(0,dp(20),0,dp(20));list.addView(empty);}
+        if(visible.isEmpty()){
+            TextView empty=text("No titles found. Try another search or language.",13,Color.rgb(184,194,220),false);
+            empty.setGravity(Gravity.CENTER);empty.setPadding(0,dp(28),0,dp(28));list.addView(empty);return;
+        }
+        int columns=2;
+        for(int i=0;i<visible.size();i+=columns){
+            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
+            LinearLayout.LayoutParams rp=params(-1,-2);rp.bottomMargin=dp(12);list.addView(row,rp);
+            for(int j=i;j<Math.min(i+columns,visible.size());j++){
+                Movie m=visible.get(j);
+                LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);
+                card.setBackground(round(panel,15));card.setClipToPadding(false);
+                card.setPadding(dp(7),dp(7),dp(7),dp(10));
+                LinearLayout.LayoutParams cardp=new LinearLayout.LayoutParams(0,-2,1);cardp.rightMargin=dp(j==i?7:0);cardp.leftMargin=dp(j==i?0:7);row.addView(card,cardp);
+                int[] colors=posterColors(m);
+                LinearLayout poster=new LinearLayout(this);poster.setOrientation(LinearLayout.VERTICAL);poster.setGravity(Gravity.BOTTOM|Gravity.LEFT);
+                poster.setPadding(dp(10),dp(10),dp(10),dp(12));poster.setBackground(roundGradient(colors,11));
+                LinearLayout.LayoutParams pp=params(-1,dp(164));card.addView(poster,pp);
+                TextView emblem=text(posterEmblem(m),35,Color.WHITE,true);emblem.setGravity(Gravity.CENTER);
+                LinearLayout.LayoutParams ep=params(-1,0);ep.weight=1;poster.addView(emblem,ep);
+                TextView genre=text(m.language.toUpperCase(Locale.ROOT)+"  ✦",9,Color.WHITE,true);poster.addView(genre);
+                TextView title=text(m.title,14,Color.WHITE,true);title.setMaxLines(2);title.setPadding(dp(3),dp(10),dp(3),0);card.addView(title);
+                TextView meta=text(m.year.isEmpty()?m.language:m.year+"  •  "+m.language,10,Color.rgb(151,165,199),false);
+                meta.setPadding(dp(3),dp(4),dp(3),0);card.addView(meta);
+                if(m.link!=null&&!m.link.isEmpty()){
+                    Button open=new Button(this);open.setText("▶ Play");open.setTextSize(11);open.setAllCaps(false);open.setTextColor(Color.BLACK);open.setBackground(round(cyan,9));
+                    LinearLayout.LayoutParams op=params(-1,dp(38));op.topMargin=dp(9);card.addView(open,op);
+                    open.setOnClickListener(v->openPlayer(m.link,m.title));
+                } else {
+                    TextView preview=text("CATALOGUE PREVIEW",8,Color.rgb(123,137,174),true);
+                    preview.setPadding(dp(3),dp(9),dp(3),0);card.addView(preview);
+                }
+            }
+            if(visible.size()%2==1&&i+1>=visible.size()){
+                View spacer=new View(this);row.addView(spacer,new LinearLayout.LayoutParams(0,1,1));
+            }
+        }
+    }
+    private int[] posterColors(Movie m){
+        String s=(m.title+" "+m.language).toLowerCase(Locale.ROOT);
+        if(s.contains("japan")||s.contains("samurai"))return new int[]{Color.rgb(90,35,133),Color.rgb(17,49,93),Color.rgb(8,16,38)};
+        if(s.contains("bangla")||s.contains("dhaka"))return new int[]{Color.rgb(0,105,112),Color.rgb(22,52,91),Color.rgb(8,16,38)};
+        if(s.contains("korean")||s.contains("moon"))return new int[]{Color.rgb(117,39,102),Color.rgb(53,44,116),Color.rgb(8,16,38)};
+        if(s.contains("english")||s.contains("midnight"))return new int[]{Color.rgb(24,93,126),Color.rgb(42,45,113),Color.rgb(8,16,38)};
+        return new int[]{Color.rgb(116,48,177),Color.rgb(36,49,111),Color.rgb(8,16,38)};
+    }
+    private String posterEmblem(Movie m){
+        String s=m.title.trim();
+        if(s.isEmpty())return "✦";
+        return s.substring(0,1).toUpperCase(Locale.ROOT)+"✦";
     }
 
     private void playManualUrl(){ String raw=manualUrlInput.getText().toString().trim(); if(!raw.toLowerCase(Locale.ROOT).startsWith("https://")){status.setText("Enter a valid HTTPS video URL.");return;} openPlayer(raw,"Online video"); }
@@ -130,7 +243,7 @@ public class MainActivity extends Activity {
         worker.execute(()->{
             HttpURLConnection conn=null;
             try{
-                URL url=new URL(raw);conn=(HttpURLConnection)url.openConnection();conn.setConnectTimeout(10000);conn.setReadTimeout(12000);conn.setRequestProperty("Accept","application/json");conn.setRequestProperty("User-Agent","AnimeFixLite/1.0");
+                URL url=new URL(raw);conn=(HttpURLConnection)url.openConnection();conn.setConnectTimeout(10000);conn.setReadTimeout(12000);conn.setRequestProperty("Accept","application/json");conn.setRequestProperty("User-Agent","ZeroxTV/1.0");
                 int code=conn.getResponseCode();if(code<200||code>=300)throw new Exception("HTTP "+code);
                 BufferedReader reader=new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF-8"));StringBuilder body=new StringBuilder();String line;
                 while((line=reader.readLine())!=null&&body.length()<2000000)body.append(line);reader.close();
