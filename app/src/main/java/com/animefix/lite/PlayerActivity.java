@@ -22,6 +22,8 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.PlayerView;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class PlayerActivity extends Activity {
     private ExoPlayer player;
